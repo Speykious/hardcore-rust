@@ -103,13 +103,13 @@ pub struct ArenaBox<'a, T: ?Sized> {
 	_phantom: PhantomData<&'a T>,
 }
 
-impl<'a, T> AsMut<T> for ArenaBox<'a, T> {
+impl<'a, T: ?Sized> AsMut<T> for ArenaBox<'a, T> {
 	fn as_mut(&mut self) -> &mut T {
 		unsafe { self.ptr.as_mut() }
 	}
 }
 
-impl<'a, T> AsRef<T> for ArenaBox<'a, T> {
+impl<'a, T: ?Sized> AsRef<T> for ArenaBox<'a, T> {
 	fn as_ref(&self) -> &T {
 		unsafe { self.ptr.as_ref() }
 	}
