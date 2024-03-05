@@ -126,7 +126,7 @@ fn things() {
 
 	for thing in things.as_ref() {
 		os::bad_print("  \0");
-		display_color(&arena, red.as_ref());
+		display_color(&arena, thing);
 	}
 	os::bad_print(":p\n\0");
 
