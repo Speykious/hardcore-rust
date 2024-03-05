@@ -40,7 +40,7 @@ struct ColorU8 {
 	b: u8,
 }
 
-fn u32_to_str(buffer: &mut [u8], mut value: u32) -> &str {
+fn usize_to_str(buffer: &mut [u8], mut value: usize) -> &str {
 	// https://tia.mat.br/posts/2014/06/23/integer_to_string_conversion.html
 	// lwan implementation
 
@@ -49,7 +49,7 @@ fn u32_to_str(buffer: &mut [u8], mut value: u32) -> &str {
 
 	loop {
 		idx -= 1;
-		buffer[idx] = b"0123456789"[value as usize % 10];
+		buffer[idx] = b"0123456789"[value % 10];
 
 		if value / 10 == 0 {
 			break;
@@ -61,6 +61,14 @@ fn u32_to_str(buffer: &mut [u8], mut value: u32) -> &str {
 	unsafe { core::str::from_utf8_unchecked(&buffer[idx..buffer.len()]) }
 }
 
+fn display_usize(arena: &Arena, n: usize) {
+	let mut buffer = arena.alloc_region(3 * size_of::<usize>(), align_of::<u8>());
+	let buffer = buffer.as_mut();
+
+	let text_n = usize_to_str(buffer, n);
+	os::bad_print(text_n);
+}
+
 fn display_color(arena: &Arena, color: &ColorU8) {
 	arena.checkpoint(|arena| {
 		let mut buffer = arena.alloc_region(3 * size_of::<u32>(), align_of::<u8>());
@@ -68,15 +76,15 @@ fn display_color(arena: &Arena, color: &ColorU8) {
 
 		os::bad_print("ColorU8 (\0");
 
-		let text_r = u32_to_str(buffer, color.r as u32);
+		let text_r = usize_to_str(buffer, color.r as usize);
 		os::bad_print(text_r);
 		os::bad_print(", \0");
 
-		let text_g = u32_to_str(buffer, color.g as u32);
+		let text_g = usize_to_str(buffer, color.g as usize);
 		os::bad_print(text_g);
 		os::bad_print(", \0");
 
-		let text_b = u32_to_str(buffer, color.b as u32);
+		let text_b = usize_to_str(buffer, color.b as usize);
 		os::bad_print(text_b);
 		os::bad_print(")\n\0");
 	});
@@ -86,7 +94,7 @@ fn display_color(arena: &Arena, color: &ColorU8) {
 fn things() {
 	os::bad_print("Arena allocator!\n\0");
 
-	let mut arena = Arena::new(1024).unwrap();
+	let mut arena = Arena::new(os::total_phys_ram()).unwrap();
 
 	let red = arena.alloc(ColorU8 { r: 255, g: 0, b: 0 });
 	let green = arena.alloc(ColorU8 { r: 0, g: 255, b: 0 });
@@ -96,13 +104,6 @@ fn things() {
 	let cyan = arena.alloc(ColorU8 { r: 0, g: 255, b: 255 });
 	let magenta = arena.alloc(ColorU8 { r: 255, g: 0, b: 255 });
 
-	arena.checkpoint(|arena| {
-		let thing = arena.alloc(ColorU8 { r: 255, g: 255, b: 255 });
-		let thing = arena.alloc(ColorU8 { r: 255, g: 255, b: 255 });
-		let thing = arena.alloc(ColorU8 { r: 255, g: 255, b: 255 });
-		let thing = arena.alloc(ColorU8 { r: 255, g: 255, b: 255 });
-	});
-
 	os::bad_print("\n\0");
 	display_color(&arena, red.as_ref());
 	display_color(&arena, green.as_ref());
@@ -110,6 +111,24 @@ fn things() {
 	display_color(&arena, yellow.as_ref());
 	display_color(&arena, cyan.as_ref());
 	display_color(&arena, magenta.as_ref());
+
+	const LEN: usize = 4096 * 1000;
+
+	os::bad_print("\nAllocating \0");
+	display_usize(&arena, LEN * size_of::<ColorU8>());
+	os::bad_print(" bytes\n\0");
+
+	let things = arena.alloc_fixed_slice::<_, LEN>(ColorU8 { r: 255, g: 255, b: 255 });
+
+	os::bad_print("Displaying \0");
+	display_usize(&arena, LEN);
+	os::bad_print(" colors...\n\0");
+
+	for thing in things.as_ref() {
+		os::bad_print("  \0");
+		display_color(&arena, red.as_ref());
+	}
+	os::bad_print(":p\n\0");
 
 	arena.free_all();
 }

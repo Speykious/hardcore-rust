@@ -71,6 +71,38 @@ impl Arena {
 		}
 	}
 
+	pub fn alloc_fixed_slice<T: Copy, const N: usize>(&self, value: T) -> ArenaBox<'_, [T; N]> {
+		let abox = self.alloc_region(size_of::<T>() * N, align_of::<T>());
+
+		let mut ptr = abox.ptr.cast::<[T; N]>();
+
+		let slice = unsafe { ptr.as_mut() };
+		for slot in slice {
+			*slot = value;
+		}
+
+		ArenaBox {
+			ptr,
+			_phantom: PhantomData,
+		}
+	}
+
+	pub fn alloc_slice<T: Copy>(&self, value: T, size: usize) -> ArenaBox<'_, [T]> {
+		let abox = self.alloc_region(size_of::<T>() * size, align_of::<T>());
+
+		let mut ptr = unsafe { NonNull::new_unchecked(abox.ptr.as_ptr() as *mut [T]) };
+
+		let slice = unsafe { ptr.as_mut() };
+		for slot in slice {
+			*slot = value;
+		}
+
+		ArenaBox {
+			ptr,
+			_phantom: PhantomData,
+		}
+	}
+
 	#[inline]
 	pub fn checkpoint(&self, f: impl FnOnce(&Self)) {
 		let checkpoint = self.curr_offset.get();
