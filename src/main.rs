@@ -90,7 +90,6 @@ fn display_color(arena: &Arena, color: &ColorU8) {
 	});
 }
 
-#[allow(unused)]
 fn things() {
 	os::bad_print("Arena allocator!\n\0");
 
@@ -130,5 +129,21 @@ fn things() {
 	}
 	os::bad_print(":p\n\0");
 
+	arena.free_all();
+}
+
+#[allow(unused)]
+fn example() {
+	let mut arena = Arena::new(os::total_phys_ram()).unwrap();
+
+	let red = arena.alloc(ColorU8 { r: 255, g: 0, b: 0 });
+	let green = arena.alloc(ColorU8 { r: 0, g: 255, b: 0 });
+	let blue = arena.alloc(ColorU8 { r: 0, g: 0, b: 255 });
+
+	let yellow = arena.alloc(ColorU8 { r: 255, g: 255, b: 0 });
+	let cyan = arena.alloc(ColorU8 { r: 0, g: 255, b: 255 });
+	let magenta = arena.alloc(ColorU8 { r: 255, g: 0, b: 255 });
+
+	display_color(&arena, blue.as_ref());
 	arena.free_all();
 }
