@@ -4,7 +4,7 @@ authors = ["Speykious <speykious@gmail.com>"]
 version = "0.1.0"
 edition = "2021"
 
-[dependencies]
+[target.'cfg(target_os = "linux")'.dependencies]
 libc = { version = "0.2", default-features = false }
 
 [profile.dev]
