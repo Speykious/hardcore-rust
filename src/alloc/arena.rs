@@ -80,17 +80,6 @@ impl Arena {
 		self.curr_offset.set(checkpoint);
 	}
 
-	// pub fn checkpoint(&self) -> ArenaCheckpoint<'_> {
-	// 	ArenaCheckpoint {
-	// 		offset: self.curr_offset.get(),
-	// 		_phantom: PhantomData,
-	// 	}
-	// }
-
-	// pub fn restore(&self, checkpoint: ArenaCheckpoint<'_>) {
-	// 	self.curr_offset.set(checkpoint.offset);
-	// }
-
 	pub fn free_all(&mut self) {
 		// all arena refs become invalid after that because of exclusive borrow
 		self.curr_offset.set(0);
@@ -113,9 +102,4 @@ impl<'a, T: ?Sized> AsRef<T> for ArenaBox<'a, T> {
 	fn as_ref(&self) -> &T {
 		unsafe { self.ptr.as_ref() }
 	}
-}
-
-pub struct ArenaCheckpoint<'a> {
-	offset: usize,
-	_phantom: PhantomData<&'a ()>,
 }
